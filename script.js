@@ -3,7 +3,6 @@ var text;
 var nodeArr = [],
     buttons = [],
     linkArr = [],
-    cookies = [],
     files = [],
     fileContent = [],
     circles = [],
@@ -27,8 +26,6 @@ g.style["display"]="block";
 g.style["height"]="22px";
 g.style["text-align"]="center";
 g.style["background-color"]="#ff0000";
-
-recount();
 
 var ul = document.createElement("UL"),
     li0 = document.createElement("LI"),
@@ -141,7 +138,6 @@ function styleE(elem, x, y, w)
     elem.style["width"] = w+"px";
     elem.style["background-color"] = "white";
     elem.style["opacity"] = "0.9";
-    //elem.style["z-index"] = "2147483647";
     elem.style["text-align"] = "center";
     elem.style["position"] = "fixed";
     elem.style.top = y+"px";
@@ -177,10 +173,9 @@ function enterListener(e)
     if(key === 13) 
     {
         disableInput(inP); 
-        divCont.removeChild(temp); 
+        temp.style["display"] = "none";
         files.push(inP.value);
-        fileContent[inP.value] = [];
-        cookies[inP.value] = 0;
+        fileContent[inP.value] = "";
     }
 }
 
@@ -194,25 +189,9 @@ function disableInput(inp){
     inp.removeEventListener("keypress", enterListener);
 }
 
-function createFile(name)
-{        
-    var file = new Blob([fileContent[name]], {type: "text/plain;charset=utf-8"});
-    var a = document.createElement("a"),
-        url = URL.createObjectURL(file);
-    a.href = url;
-    a.download = name + ".txt";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function() 
-        {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);  
-    }, 0); 
-}
-
-function setCookie(name, value)
+function setF(name, value)
 {
-    fileContent[name].push(value + '\n');
+    fileContent[name] = fileContent[name].concat(value.trim() + '\n');
 }
 
 function clickOnBubble(target)
@@ -292,7 +271,7 @@ function type(e)
             console.log("empty")
         } else 
         {
-            setCookie(e.target.textContent, focusNode.nodeValue);
+            setF(e.target.textContent, focusNode.nodeValue);
             showMenu();
         }
     };
@@ -303,6 +282,10 @@ function type(e)
     input.onkeyup=function(){txt.innerHTML=this.value};
     enableInput(input);
     nC ++;
+    if(nC == 18)
+    {
+        li0.style["display"] = "none";
+    }
 }
 
 function follow()
@@ -315,11 +298,31 @@ function ed()
 
 function save()
 {
+    var content = "";
     for(var i = 0; i < files.length; i++)
     {
         console.log(i + " *** " + files[i]);
-        createFile(files[i]);
+        content = content.concat("<"+files[i]+">" + '\n');
+        content = content.concat(fileContent[files[i]] + '\n' + '\n');
     }
+    download("collection",content);
+}
+
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+    document.body.removeChild(element);
+}
+
+function createFile(name)
+{     
+    download(name, fileContent[name]);
 }
 
 document.oncontextmenu = function(e){e.preventDefault()};
@@ -358,9 +361,11 @@ function recount()
                 nodes ++;
             }
         }
-    } 
-    for(var i = 0; i < scripts.length - 1; i++)
+    }
+
+    for(var i = 0; i < scripts.length; i++)
     {
         scripts[i].parentElement.removeChild(scripts[i]);    
     }
 }
+recount();
